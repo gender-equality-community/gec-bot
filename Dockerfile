@@ -6,6 +6,9 @@ RUN apk add --update alpine-sdk ca-certificates upx && \
 WORKDIR /app
 COPY . .
 
+ARG logLevel
+ENV LOGLVL=$logLevel
+
 RUN make app
 
 FROM scratch

@@ -1,6 +1,6 @@
 IMG ?= ghcr.io/gender-equality-community/gec-bot
 TAG ?= latest
-LOGLVL ?= warn
+LOGLVL ?= DEBUG
 
 default: app
 
@@ -10,7 +10,7 @@ app: *.go go.mod go.sum
 
 .PHONY: docker-build docker-push
 docker-build:
-	docker build -t $(IMG):$(TAG) .
+	docker build --build-arg logLevel=$(LOGLVL) -t $(IMG):$(TAG) .
 
 docker-push:
 	docker push $(IMG):$(TAG)
