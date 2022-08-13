@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,7 @@ import (
 
 var (
 	LogLevel = "DEBUG"
+	db       = os.Getenv("DATABASE")
 	testJID  = must(types.ParseJID(os.Getenv("GEC_JID")))
 )
 
@@ -27,7 +29,11 @@ func must(in types.JID, err error) types.JID {
 func main() {
 	dbLog := waLog.Stdout("Database", LogLevel, true)
 
-	container, err := sqlstore.New("sqlite3", "file:.gec.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New("sqlite3",
+		fmt.Sprintf("file:.%s?_foreign_keys=on", db),
+		dbLog,
+	)
+
 	if err != nil {
 		panic(err)
 	}
