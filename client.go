@@ -66,9 +66,9 @@ func (c Client) handler(evt interface{}) {
 }
 
 func (c Client) handleMessage(msg *events.Message) {
-	if msg.Info.IsFromMe {
-		return
-	}
+	// if msg.Info.IsFromMe {
+	//	return
+	// }
 
 	err := c.r.Produce(msg.Message.GetConversation())
 	if err != nil {
