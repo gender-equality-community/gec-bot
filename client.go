@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"os"
 
 	"github.com/mdp/qrterminal"
@@ -66,11 +68,13 @@ func (c Client) handler(evt interface{}) {
 }
 
 func (c Client) handleMessage(msg *events.Message) {
-	// if msg.Info.IsFromMe {
-	//	return
-	// }
+	if msg.Info.IsFromMe {
+		return
+	}
 
-	err := c.r.Produce(msg.Message.GetConversation())
+	err := c.r.Produce(
+		fmt.Sprintf("%x", sha256.Sum256([]byte(msg.Info.Sender.String()))),
+		msg.Message.GetConversation())
 	if err != nil {
 		panic(err)
 	}

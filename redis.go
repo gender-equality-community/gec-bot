@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-redis/redis/v9"
 )
@@ -22,12 +23,13 @@ func NewRedis(addr, stream string) (r Redis, err error) {
 	return r, nil
 }
 
-func (r Redis) Produce(msg string) (err error) {
+func (r Redis) Produce(id, msg string) (err error) {
 	return r.client.XAdd(context.Background(), &redis.XAddArgs{
 		Stream: r.stream,
-		Values: []string{
-			"msg",
-			msg,
+		Values: map[string]interface{}{
+			"id":  id,
+			"ts":  time.Now().Unix(),
+			"msg": msg,
 		},
 	}).Err()
 }
