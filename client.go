@@ -24,7 +24,7 @@ func New(db *sqlstore.Container, r Redis) (c Client, err error) {
 		return
 	}
 
-	clientLog := waLog.Stdout("Client", logLevel, true)
+	clientLog := waLog.Stdout("Client", LogLevel, true)
 
 	c.c = whatsmeow.NewClient(deviceStore, clientLog)
 	c.c.AddEventHandler(c.handler)
