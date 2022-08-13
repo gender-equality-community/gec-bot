@@ -13,9 +13,11 @@ import (
 )
 
 var (
-	LogLevel = "DEBUG"
-	db       = os.Getenv("DATABASE")
-	testJID  = must(types.ParseJID(os.Getenv("GEC_JID")))
+	LogLevel  = "DEBUG"
+	db        = os.Getenv("DATABASE")
+	redisAddr = os.Getenv("REDIS_ADDR")
+
+	testJID = must(types.ParseJID(os.Getenv("GEC_JID")))
 )
 
 func must(in types.JID, err error) types.JID {
@@ -38,7 +40,7 @@ func main() {
 		panic(err)
 	}
 
-	r, err := NewRedis("localhost:6379", "gec")
+	r, err := NewRedis(redisAddr, "gec")
 	if err != nil {
 		panic(err)
 	}
