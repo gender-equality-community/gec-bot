@@ -3,9 +3,11 @@ module github.com/gender-equality-community/gec-bot
 go 1.17
 
 require (
+	github.com/agnivade/levenshtein v1.1.1
 	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/mdp/qrterminal v1.0.1
+	github.com/rs/xid v1.4.0
 	go.mau.fi/whatsmeow v0.0.0-20220804175245-31c5af44cb82
 )
 

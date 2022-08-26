@@ -1,6 +1,6 @@
 IMG ?= ghcr.io/gender-equality-community/gec-bot
 TAG ?= latest
-LOGLVL ?= DEBUG
+LOGLVL ?= INFO
 
 default: app
 

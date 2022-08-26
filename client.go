@@ -4,11 +4,15 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/mdp/qrterminal"
 	"go.mau.fi/whatsmeow"
+	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/store/sqlstore"
+	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
@@ -72,17 +76,68 @@ func (c Client) handleMessage(msg *events.Message) {
 		return
 	}
 
-	err := c.r.Produce(
-		fmt.Sprintf("%x", sha256.Sum256([]byte(msg.Info.Sender.String()))),
-		msg.Message.GetConversation())
-	if err != nil {
-		panic(err)
+	ctx := context.Background()
+	jid := msg.Info.Sender.ToNonAD()
+
+	c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
+
+	id := fmt.Sprintf("%x", sha256.Sum256([]byte(msg.Info.Sender.String())))
+	txt := msg.Message.GetConversation()
+
+	for _, err := range []error{
+		c.r.Produce(id, txt),
+		c.r.storeJID(jid, id),
+	} {
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	if msg.Info.Sender == testJID {
-		// c.c.SendMessage(context.Background(), msg.Info.Sender, "", &waProto.Message{
-		//	Conversation: stringRef("Thank you for your message, the GEC will do the thing"),
-		// })
+	var err error
+
+	if isMaybeGreeting(txt) {
+		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+			Conversation: stringRef("Hello, and welcome to the Anonymous GEC Report Bot. What's on your mind?"),
+		})
+		if err != nil {
+			log.Print(err)
+		}
+
+		return
+	}
+
+	// If we haven't messaged this person the standard 'thanks for your response' in the last
+	// 30 minutes then do so now
+	if !c.r.IDExists(id) {
+		c.r.SetID(id)
+		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+			Conversation: stringRef("Thank you for your message, we understand how hard it is speaking out. Please provide us with all the information you can."),
+		})
+
+		if err != nil {
+			log.Print(err)
+		}
+	}
+}
+
+func (c Client) ResponseQueue(m chan Message) {
+	ctx := context.Background()
+
+	for msg := range m {
+		jid, err := c.r.readJID(msg.ID)
+		if err != nil || jid.IsEmpty() {
+			log.Print(err)
+
+			continue
+		}
+
+		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+			Conversation: stringRef(msg.Message),
+		})
+
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
 
