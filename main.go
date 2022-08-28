@@ -11,6 +11,23 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
+const (
+	// Greeting Response is sent when a recipient sends a message that looks vaguely like
+	// a greeting.
+	//
+	// To understand what this might look like, take a look in phrases.go
+	greetingResponse = "Hello, and welcome to the Anonymous GEC Report Bot. What's on your mind?"
+
+	// Thank You response is sent when a recipient sends us a message.
+	//
+	// To keep this from spamming the hell out of people, we only send a maximum of 1
+	// response per 30 minutes.
+	//
+	// Essentiall, when  a message comes in, we check whether we've responded in the last
+	// 30 minutes and if we haven't then we send another
+	thankyouResponse = "Thank you for your message, we understand how hard it is speaking out. Please provide us with all the information you can."
+)
+
 var (
 	LogLevel  = "DEBUG"
 	db        = os.Getenv("DATABASE")
