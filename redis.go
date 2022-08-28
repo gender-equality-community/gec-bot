@@ -22,8 +22,18 @@ var (
 	busyGroupErr = "BUSYGROUP Consumer Group name already exists"
 )
 
+type redisClient interface {
+	Get(context.Context, string) *redis.StringCmd
+	SAdd(context.Context, string, ...interface{}) *redis.IntCmd
+	SMembers(context.Context, string) *redis.StringSliceCmd
+	Set(context.Context, string, interface{}, time.Duration) *redis.StatusCmd
+	XAdd(context.Context, *redis.XAddArgs) *redis.StringCmd
+	XGroupCreate(context.Context, string, string, string) *redis.StatusCmd
+	XReadGroup(context.Context, *redis.XReadGroupArgs) *redis.XStreamSliceCmd
+}
+
 type Redis struct {
-	client    *redis.Client
+	client    redisClient
 	inStream  string
 	outStream string
 	id        string

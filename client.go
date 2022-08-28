@@ -17,8 +17,17 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
+type whatsappClient interface {
+	AddEventHandler(handler whatsmeow.EventHandler) uint32
+	GetQRChannel(ctx context.Context) (<-chan whatsmeow.QRChannelItem, error)
+	Connect() error
+	Disconnect()
+	MarkRead([]string, time.Time, types.JID, types.JID) error
+	SendMessage(context.Context, types.JID, string, *waProto.Message) (whatsmeow.SendResponse, error)
+}
+
 type Client struct {
-	c *whatsmeow.Client
+	c whatsappClient
 	r Redis
 }
 
@@ -39,7 +48,9 @@ func New(db *sqlstore.Container, r Redis) (c Client, err error) {
 }
 
 func (c *Client) connect() (err error) {
-	if c.c.Store.ID == nil {
+	wc, ok := c.c.(*whatsmeow.Client)
+
+	if ok && wc.Store.ID == nil {
 		// No ID stored, new login
 		qrChan, _ := c.c.GetQRChannel(context.Background())
 
@@ -79,8 +90,6 @@ func (c Client) handleMessage(msg *events.Message) {
 	ctx := context.Background()
 	jid := msg.Info.Sender.ToNonAD()
 
-	c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
-
 	id := fmt.Sprintf("%x", sha256.Sum256([]byte(msg.Info.Sender.String())))
 	txt := msg.Message.GetConversation()
 
@@ -89,9 +98,11 @@ func (c Client) handleMessage(msg *events.Message) {
 		c.r.storeJID(jid, id),
 	} {
 		if err != nil {
-			panic(err)
+			return
 		}
 	}
+
+	c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
 
 	var err error
 
@@ -121,24 +132,31 @@ func (c Client) handleMessage(msg *events.Message) {
 }
 
 func (c Client) ResponseQueue(m chan Message) {
-	ctx := context.Background()
-
 	for msg := range m {
-		jid, err := c.r.readJID(msg.ID)
-		if err != nil || jid.IsEmpty() {
-			log.Print(err)
-
-			continue
-		}
-
-		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
-			Conversation: stringRef(msg.Message),
-		})
-
+		err := c.HandleResponse(msg)
 		if err != nil {
-			log.Print(err)
+			log.Printf("%#v", err)
 		}
 	}
+}
+
+func (c Client) HandleResponse(msg Message) (err error) {
+	ctx := context.Background()
+
+	if msg.ID == "" {
+		return fmt.Errorf("malformed Message")
+	}
+
+	jid, err := c.r.readJID(msg.ID)
+	if err != nil || jid.IsEmpty() {
+		return
+	}
+
+	_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+		Conversation: stringRef(msg.Message),
+	})
+
+	return
 }
 
 func stringRef(s string) *string {
