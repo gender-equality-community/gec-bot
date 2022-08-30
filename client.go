@@ -120,9 +120,21 @@ func (c Client) handleMessage(msg *events.Message) {
 	// If we haven't messaged this person the standard 'thanks for your response' in the last
 	// 30 minutes then do so now
 	if !c.r.IDExists(id) {
-		c.r.SetID(id)
+		c.r.SetID(id, time.Minute*30)
 		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
 			Conversation: stringRef(thankyouResponse),
+		})
+
+		if err != nil {
+			log.Print(err)
+		}
+	}
+
+	// If we haven't sent the disclaimer in 24 hours, then do that
+	if !c.r.IDExists(disclaimerId(id)) {
+		c.r.SetID(disclaimerId(id), time.Hour*24)
+		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+			Conversation: stringRef(disclaimerResponse),
 		})
 
 		if err != nil {
@@ -161,4 +173,8 @@ func (c Client) HandleResponse(msg Message) (err error) {
 
 func stringRef(s string) *string {
 	return &s
+}
+
+func disclaimerId(s string) string {
+	return fmt.Sprintf("disclaimer:%s", s)
 }

@@ -99,8 +99,8 @@ func (r Redis) Process(c chan Message) (err error) {
 	return nil
 }
 
-func (r Redis) SetID(id string) {
-	r.client.Set(context.Background(), id, "msg", time.Minute*30)
+func (r Redis) SetID(id string, duration time.Duration) {
+	r.client.Set(context.Background(), id, "msg", duration)
 }
 
 func (r Redis) IDExists(id string) bool {
