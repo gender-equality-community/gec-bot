@@ -27,7 +27,10 @@ const (
 	// 30 minutes and if we haven't then we send another
 	thankyouResponse = "Thank you for your message, please provide as much information as you're comfortable sharing and we'll get back to you as soon as we can."
 
-	// Disclaimer response is sent to ensure recipients don't send us shit we can't deal with
+	// Disclaimer response is sent to ensure recipients don't send us shit we can't deal with.
+	//
+	// In much the same way as we only send a Thank You every 30 mins or less, we only send the
+	// disclaimer once every 24 hours.
 	disclaimerResponse = "DISCLAIMER: This is not an incident reporting service. If you believe you're being subjected to bullying, harassment, or misconduct then we cannot escalate on your behalf but we can advise you on your next steps."
 )
 

@@ -52,7 +52,9 @@ func (c *dummyClient) SendMessage(_ context.Context, _ types.JID, _ string, msg 
 		err = fmt.Errorf("an error")
 	}
 
-	c.msg = msg.GetConversation()
+	if c.msg == "" {
+		c.msg = msg.GetConversation()
+	}
 
 	return
 }
@@ -82,9 +84,9 @@ func TestClient_Handle(t *testing.T) {
 	}{
 		{"Messages from me should be ignored", new(dummyClient), new(dummyRedis), &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: true, Sender: dummyJid()}, ID: "123"}}, false, ""},
 		{"Redis errors should bomb out, but not mark read", new(dummyClient), &dummyRedis{err: true}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}}, false, ""},
-		{"Greetings should be recognised as such", new(dummyClient), new(dummyRedis), &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("Hello!")}}, true, "Hello, and welcome to the Anonymous GEC Report Bot. What's on your mind?"},
+		{"Greetings should be recognised as such", new(dummyClient), new(dummyRedis), &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("Hello!")}}, true, "Hello, and welcome to the Anonymous GEC Advisor. What's on your mind?"},
 		{"Where we've already messaged someone, don't message again", new(dummyClient), &dummyRedis{idExists: true}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("I would like to talk to somebody please")}}, true, ""},
-		{"Where we've not messaged someone recently, message again", new(dummyClient), &dummyRedis{idExists: false}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("I would like to talk to somebody please")}}, true, "Thank you for your message, we understand how hard it is speaking out. Please provide us with all the information you can."},
+		{"Where we've not messaged someone recently, message again", new(dummyClient), &dummyRedis{idExists: false}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("I would like to talk to somebody please")}}, true, "Thank you for your message, please provide as much information as you're comfortable sharing and we'll get back to you as soon as we can."},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			c := Client{

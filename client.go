@@ -114,6 +114,8 @@ func (c Client) handleMessage(msg *events.Message) {
 			log.Print(err)
 		}
 
+		c.disclaimer(jid, id)
+
 		return
 	}
 
@@ -130,10 +132,16 @@ func (c Client) handleMessage(msg *events.Message) {
 		}
 	}
 
+	c.disclaimer(jid, id)
+}
+
+func (c Client) disclaimer(jid types.JID, id string) {
 	// If we haven't sent the disclaimer in 24 hours, then do that
 	if !c.r.IDExists(disclaimerId(id)) {
+		ctx := context.Background()
+
 		c.r.SetID(disclaimerId(id), time.Hour*24)
-		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+		_, err := c.c.SendMessage(ctx, jid, "", &waProto.Message{
 			Conversation: stringRef(disclaimerResponse),
 		})
 
@@ -141,6 +149,7 @@ func (c Client) handleMessage(msg *events.Message) {
 			log.Print(err)
 		}
 	}
+
 }
 
 func (c Client) ResponseQueue(m chan Message) {
