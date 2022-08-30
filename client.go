@@ -90,7 +90,7 @@ func (c Client) handleMessage(msg *events.Message) {
 	ctx := context.Background()
 	jid := msg.Info.Sender.ToNonAD()
 
-	id := fmt.Sprintf("%x", sha256.Sum256([]byte(msg.Info.Sender.String())))
+	id := fmt.Sprintf("%x", sha256.Sum256([]byte(jid.String())))
 	txt := msg.Message.GetConversation()
 
 	for _, err := range []error{
@@ -108,7 +108,7 @@ func (c Client) handleMessage(msg *events.Message) {
 
 	if isMaybeGreeting(txt) {
 		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
-			Conversation: stringRef("Hello, and welcome to the Anonymous GEC Report Bot. What's on your mind?"),
+			Conversation: stringRef(greetingResponse),
 		})
 		if err != nil {
 			log.Print(err)
@@ -122,7 +122,7 @@ func (c Client) handleMessage(msg *events.Message) {
 	if !c.r.IDExists(id) {
 		c.r.SetID(id)
 		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
-			Conversation: stringRef("Thank you for your message, we understand how hard it is speaking out. Please provide us with all the information you can."),
+			Conversation: stringRef(thankyouResponse),
 		})
 
 		if err != nil {

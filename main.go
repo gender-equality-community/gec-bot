@@ -16,16 +16,16 @@ const (
 	// a greeting.
 	//
 	// To understand what this might look like, take a look in phrases.go
-	greetingResponse = "Hello, and welcome to the Anonymous GEC Report Bot. What's on your mind?"
+	greetingResponse = "Hello, and welcome to the Anonymous GEC Advisor. What's on your mind?"
 
 	// Thank You response is sent when a recipient sends us a message.
 	//
 	// To keep this from spamming the hell out of people, we only send a maximum of 1
 	// response per 30 minutes.
 	//
-	// Essentiall, when  a message comes in, we check whether we've responded in the last
+	// Essentially, when  a message comes in, we check whether we've responded in the last
 	// 30 minutes and if we haven't then we send another
-	thankyouResponse = "Thank you for your message, we understand how hard it is speaking out. Please provide us with all the information you can."
+	thankyouResponse = "Thank you for your message, please provide as much information as you're comfortable sharing and we'll get back to you as soon as we can."
 )
 
 var (
