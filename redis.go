@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis/v9"
+	redis "github.com/go-redis/redis/v9"
 	"github.com/rs/xid"
 	"github.com/sethvargo/go-diceware/diceware"
 	"go.mau.fi/whatsmeow/types"

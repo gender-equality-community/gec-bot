@@ -119,7 +119,10 @@ func (c Client) handleMessage(msg *events.Message) {
 		return
 	}
 
-	c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
+	err = c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
+	if err != nil {
+		return
+	}
 
 	if isMaybeGreeting(txt) {
 		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
