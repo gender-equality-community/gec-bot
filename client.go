@@ -103,7 +103,17 @@ func (c Client) handleMessage(msg *events.Message) {
 		}
 	}
 
-	txt := msg.Message.GetConversation()
+	var txt string
+	if msg.Message.ExtendedTextMessage != nil {
+		txt = msg.Message.ExtendedTextMessage.GetText()
+	} else {
+		txt = msg.Message.GetConversation()
+	}
+
+	if txt == "" {
+		return
+	}
+
 	err = c.r.Produce(id, txt)
 	if err != nil {
 		return
