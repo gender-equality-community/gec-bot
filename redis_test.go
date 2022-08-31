@@ -35,18 +35,17 @@ func (r dummyRedis) Get(context.Context, string) *redis.StringCmd {
 	return redis.NewStringResult("foo", err)
 }
 
-func (r dummyRedis) SAdd(context.Context, string, ...interface{}) *redis.IntCmd {
-	return redis.NewIntResult(1, r.getErr())
-}
-
-func (r dummyRedis) SMembers(context.Context, string) *redis.StringSliceCmd {
-	s := []string{"A\xff\x81\x03\x01\x01\x03JID\x01\xff\x82\x00\x01\x05\x01\x04User\x01\x0c\x00\x01\x05Agent\x01\x06\x00\x01\x06Device\x01\x06\x00\x01\x06Server\x01\x0c\x00\x01\x02AD\x01\x02\x00\x00\x00!\xff\x82\x01\x0c447360602643\x03\x0es.whatsapp.net\x00"}
-
+func (r dummyRedis) HGet(context.Context, string, string) *redis.StringCmd {
+	s := "A\xff\x81\x03\x01\x01\x03JID\x01\xff\x82\x00\x01\x05\x01\x04User\x01\x0c\x00\x01\x05Agent\x01\x06\x00\x01\x06Device\x01\x06\x00\x01\x06Server\x01\x0c\x00\x01\x02AD\x01\x02\x00\x00\x00!\xff\x82\x01\x0c447360602643\x03\x0es.whatsapp.net\x00"
 	if r.noJID {
-		s = nil
+		s = ""
 	}
 
-	return redis.NewStringSliceResult(s, r.getErr())
+	return redis.NewStringResult(s, r.getErr())
+}
+
+func (r dummyRedis) HSet(_ context.Context, s string, sl ...interface{}) *redis.IntCmd {
+	return redis.NewIntResult(1, r.getErr())
 }
 
 func (r dummyRedis) Set(context.Context, string, interface{}, time.Duration) *redis.StatusCmd {

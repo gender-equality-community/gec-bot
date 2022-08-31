@@ -5,10 +5,12 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/rs/xid"
+	"github.com/sethvargo/go-diceware/diceware"
 	"go.mau.fi/whatsmeow/types"
 )
 
@@ -24,8 +26,8 @@ var (
 
 type redisClient interface {
 	Get(context.Context, string) *redis.StringCmd
-	SAdd(context.Context, string, ...interface{}) *redis.IntCmd
-	SMembers(context.Context, string) *redis.StringSliceCmd
+	HGet(context.Context, string, string) *redis.StringCmd
+	HSet(context.Context, string, ...interface{}) *redis.IntCmd
 	Set(context.Context, string, interface{}, time.Duration) *redis.StatusCmd
 	XAdd(context.Context, *redis.XAddArgs) *redis.StringCmd
 	XGroupCreate(context.Context, string, string, string) *redis.StatusCmd
@@ -99,42 +101,115 @@ func (r Redis) Process(c chan Message) (err error) {
 	return nil
 }
 
-func (r Redis) SetID(id string, duration time.Duration) {
+// MarkRecentlySent marks a specific recipient as having received an auto-response
+// message within a specific period.
+//
+// This is used to make sure things like welcome messages and disclaimers aren't
+// sent as a response to every single message
+func (r Redis) MarkRecentlySent(id string, duration time.Duration) {
 	r.client.Set(context.Background(), id, "msg", duration)
 }
 
-func (r Redis) IDExists(id string) bool {
+// HasRecentlySent is the counter part of SetLastSent; it is used to determine
+// whether or not to send an auto-response
+func (r Redis) HasRecentlySent(id string) bool {
 	return r.client.Get(context.Background(), id).Err() == nil
 }
 
-func (r Redis) storeJID(jid types.JID, id string) (err error) {
-	var b bytes.Buffer
+// JIDToID takes a JID and returns either an internal, anonymised ID, or
+// an error - signifying that this JID is brand new
+func (r Redis) JIDToID(jid types.JID) (id string, err error) {
+	b, err := jidToBytes(jid)
+	if err != nil {
+		return
+	}
 
-	enc := gob.NewEncoder(&b)
+	id, err = r.client.HGet(context.Background(), "jids", string(b)).Result()
+	if err != nil {
+		return
+	}
+
+	if len(id) == 0 {
+		err = fmt.Errorf("expected result to contain one ID, received %#v", id)
+	}
+
+	return
+}
+
+// IDToJID takes an ID and returns the JID attached to it
+func (r Redis) IDToJID(id string) (jid types.JID, err error) {
+	data, err := r.client.HGet(context.Background(), "ids", id).Result()
+	if err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		err = fmt.Errorf("expected result to contain one ID, received %#v", data)
+
+		return
+	}
+
+	return jidFromBytes([]byte(data))
+}
+
+// MintID takes a JID, creates a new ID for it, and adds to
+// redis
+func (r Redis) MintID(j types.JID) (id string, err error) {
+	var l []string
+	for {
+		l, err = diceware.Generate(3)
+		if err != nil {
+			return
+		}
+
+		id = strings.Join(l, "-")
+
+		// Lazily check whether an ID is in use
+		_, err = r.IDToJID(id)
+		if err != nil {
+			break
+		}
+	}
+
+	jb, err := jidToBytes(j)
+	if err != nil {
+		return
+	}
+
+	ctx := context.Background()
+	err = r.client.HSet(ctx, "jids", string(jb), id).Err()
+	if err != nil {
+		return
+	}
+
+	err = r.client.HSet(ctx, "ids", id, jb).Err()
+
+	return
+}
+
+func disclaimerKey(id string) string {
+	return fmt.Sprintf("disclaimer:%s", id)
+}
+
+func thankyouKey(id string) string {
+	return fmt.Sprintf("ty:%s", id)
+}
+
+func jidToBytes(jid types.JID) (b []byte, err error) {
+	var buf bytes.Buffer
+
+	enc := gob.NewEncoder(&buf)
 	err = enc.Encode(jid)
 	if err != nil {
 		return
 	}
 
-	return r.client.SAdd(context.Background(), jidKey(id), string(b.Bytes())).Err()
+	return buf.Bytes(), nil
 }
 
-func (r Redis) readJID(id string) (jid types.JID, err error) {
-	members, err := r.client.SMembers(context.Background(), jidKey(id)).Result()
-	if err != nil {
-		return
-	}
-
-	if len(members) != 1 {
-		return
-	}
-
-	dec := gob.NewDecoder(bytes.NewBufferString(members[0]))
-	dec.Decode(&jid)
+func jidFromBytes(b []byte) (jid types.JID, err error) {
+	dec := gob.NewDecoder(bytes.NewBuffer(b))
+	err = dec.Decode(&jid)
 
 	return
-}
-
-func jidKey(id string) string {
-	return fmt.Sprintf("jid:%s", id)
 }

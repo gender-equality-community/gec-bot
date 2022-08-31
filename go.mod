@@ -8,6 +8,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/mdp/qrterminal v1.0.1
 	github.com/rs/xid v1.4.0
+	github.com/sethvargo/go-diceware v0.3.0
 	go.mau.fi/whatsmeow v0.0.0-20220804175245-31c5af44cb82
 )
 

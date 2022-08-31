@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"log"
 	"os"
@@ -90,21 +89,27 @@ func (c Client) handleMessage(msg *events.Message) {
 	ctx := context.Background()
 	jid := msg.Info.Sender.ToNonAD()
 
-	id := fmt.Sprintf("%x", sha256.Sum256([]byte(jid.String())))
-	txt := msg.Message.GetConversation()
+	// lookup id for jid
+	var (
+		id  string
+		err error
+	)
 
-	for _, err := range []error{
-		c.r.Produce(id, txt),
-		c.r.storeJID(jid, id),
-	} {
+	id, err = c.r.JIDToID(jid)
+	if err != nil {
+		id, err = c.r.MintID(jid)
 		if err != nil {
 			return
 		}
 	}
 
-	c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
+	txt := msg.Message.GetConversation()
+	err = c.r.Produce(id, txt)
+	if err != nil {
+		return
+	}
 
-	var err error
+	c.c.MarkRead([]types.MessageID{msg.Info.ID}, time.Now(), jid, jid)
 
 	if isMaybeGreeting(txt) {
 		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
@@ -121,8 +126,8 @@ func (c Client) handleMessage(msg *events.Message) {
 
 	// If we haven't messaged this person the standard 'thanks for your response' in the last
 	// 30 minutes then do so now
-	if !c.r.IDExists(id) {
-		c.r.SetID(id, time.Minute*30)
+	if !c.r.HasRecentlySent(thankyouKey(id)) {
+		c.r.MarkRecentlySent(thankyouKey(id), time.Minute*30)
 		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
 			Conversation: stringRef(thankyouResponse),
 		})
@@ -137,10 +142,10 @@ func (c Client) handleMessage(msg *events.Message) {
 
 func (c Client) disclaimer(jid types.JID, id string) {
 	// If we haven't sent the disclaimer in 24 hours, then do that
-	if !c.r.IDExists(disclaimerId(id)) {
+	if !c.r.HasRecentlySent(disclaimerKey(id)) {
 		ctx := context.Background()
 
-		c.r.SetID(disclaimerId(id), time.Hour*24)
+		c.r.MarkRecentlySent(disclaimerKey(id), time.Hour*24)
 		_, err := c.c.SendMessage(ctx, jid, "", &waProto.Message{
 			Conversation: stringRef(disclaimerResponse),
 		})
@@ -168,7 +173,7 @@ func (c Client) HandleResponse(msg Message) (err error) {
 		return fmt.Errorf("malformed Message")
 	}
 
-	jid, err := c.r.readJID(msg.ID)
+	jid, err := c.r.IDToJID(msg.ID)
 	if err != nil || jid.IsEmpty() {
 		return
 	}

@@ -87,6 +87,7 @@ func TestClient_Handle(t *testing.T) {
 		{"Greetings should be recognised as such", new(dummyClient), new(dummyRedis), &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("Hello!")}}, true, "Hello, and welcome to the Anonymous GEC Advisor. What's on your mind?"},
 		{"Where we've already messaged someone, don't message again", new(dummyClient), &dummyRedis{idExists: true}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("I would like to talk to somebody please")}}, true, ""},
 		{"Where we've not messaged someone recently, message again", new(dummyClient), &dummyRedis{idExists: false}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("I would like to talk to somebody please")}}, true, "Thank you for your message, please provide as much information as you're comfortable sharing and we'll get back to you as soon as we can."},
+		{"Brand new recipients should get a new ID", new(dummyClient), &dummyRedis{noJID: true}, &events.Message{Info: types.MessageInfo{MessageSource: types.MessageSource{IsFromMe: false, Sender: dummyJid()}, ID: "123"}, Message: &waProto.Message{Conversation: stringRef("Hello!")}}, true, "Hello, and welcome to the Anonymous GEC Advisor. What's on your mind?"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			c := Client{
@@ -126,7 +127,7 @@ func TestClient_HandleResponse(t *testing.T) {
 		{"Message is malformed and has no ID should error", new(dummyClient), new(dummyRedis), Message{}, true},
 		{"Redis errors float error up", new(dummyClient), &dummyRedis{err: true}, cleanMsg, true},
 		{"Whatsapp messages float up", &dummyClient{err: true}, new(dummyRedis), cleanMsg, true},
-		{"Unknown recipient should fail but not error", &dummyClient{err: true}, &dummyRedis{noJID: true}, Message{ID: "foo"}, false},
+		{"Unknown recipient should fail", &dummyClient{err: true}, &dummyRedis{noJID: true}, Message{ID: "foo"}, true},
 		{"Valid payloads and recipients should succeed", new(dummyClient), new(dummyRedis), cleanMsg, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
