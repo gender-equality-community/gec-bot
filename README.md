@@ -1,3 +1,13 @@
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=bugs)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+
+---
+
 # Gender Equality Community Whatsapp Bot
 
 The GEC Bot does two things:
