@@ -10,13 +10,37 @@ The GEC Bot does two things:
 
 ## Anonymisation
 
-Given a message sender from WhatsApp, we SHA256 that sender ID, and store that mapping in redis. We do this for two reasons:
+For each new recipient we generate a random code name using the Diceware Password Generator, as per:
 
-1. We only share the sha downstream to avoid outing people
-2. We kinda need to know which ID maps to which person for responding back
+```golang
+l, err = diceware.Generate(3)
+if err != nil {
+    return
+}
 
-Because up until recently we only had the first concern (which is to say until recently we only sent messages one way and didn't allow for responses back via slack), so we only needed hashes.
+id = strings.Join(l, "-")
+```
 
+We then check whether this ID is already present in our database. This gives keys like:
+
+```txt
+overhand-subdivide-thaw
+promotion-basically-unreal
+clumsily-tag-gizmo
+return-lyricist-sixtieth
+helmet-gothic-linguist
+frugality-pediatric-overstate
+subzero-plastic-sadness
+sliding-dairy-sleet
+endurance-ferry-election
+unlatch-childhood-gristle
+```
+
+These are used to group messages from a recipient later on, through slack.
+
+**However**
+
+The process of generating an ID and assigning it to a WhatsApp recipient is not a one-way transformation. With access to either the burner phone driving this app, or the underlying database, its possible to figure out who sent what message. This is unavoidable, and good security practice is necessary.
 
 ## On Redis Streams
 

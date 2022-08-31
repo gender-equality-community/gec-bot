@@ -198,7 +198,3 @@ func (c Client) HandleResponse(msg Message) (err error) {
 func stringRef(s string) *string {
 	return &s
 }
-
-func disclaimerId(s string) string {
-	return fmt.Sprintf("disclaimer:%s", s)
-}
