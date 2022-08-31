@@ -45,6 +45,12 @@ jobs:
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
         TAG=${GITHUB_REF##*/} make docker-build docker-push
 
+    - name: Scan image
+      uses: anchore/scan-action@v3
+      with:
+        image: "ghcr.io/gender-equality-community/gec-bot:TAG=${GITHUB_REF##*/}"
+
+
   sonarcloud:
     runs-on: ubuntu-latest
     steps:
