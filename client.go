@@ -86,7 +86,6 @@ func (c Client) handleMessage(msg *events.Message) {
 		return
 	}
 
-	ctx := context.Background()
 	jid := msg.Info.Sender.ToNonAD()
 
 	// lookup id for jid
@@ -125,49 +124,39 @@ func (c Client) handleMessage(msg *events.Message) {
 	}
 
 	if isMaybeGreeting(txt) {
-		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
-			Conversation: stringRef(greetingResponse),
-		})
+		err = c.sendAutoResponse(jid, id, greetingResponse)
+	} else if !c.r.HasRecentlySent(thankyouKey(id)) {
+		err = c.sendAutoResponse(jid, id, thankyouResponse)
+
+		c.r.MarkRecentlySent(thankyouKey(id), time.Minute*30)
+	}
+
+	if err != nil {
+		log.Print(err)
+	}
+
+	if !c.r.HasRecentlySent(disclaimerKey(id)) {
+		err = c.sendAutoResponse(jid, id, disclaimerResponse)
 		if err != nil {
 			log.Print(err)
 		}
 
-		c.disclaimer(jid, id)
+		c.r.MarkRecentlySent(disclaimerKey(id), time.Hour*24)
+	}
+}
 
+func (c Client) sendAutoResponse(jid types.JID, id, txt string) (err error) {
+	ctx := context.Background()
+
+	_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
+		Conversation: stringRef(txt),
+	})
+
+	if err != nil {
 		return
 	}
 
-	// If we haven't messaged this person the standard 'thanks for your response' in the last
-	// 30 minutes then do so now
-	if !c.r.HasRecentlySent(thankyouKey(id)) {
-		c.r.MarkRecentlySent(thankyouKey(id), time.Minute*30)
-		_, err = c.c.SendMessage(ctx, jid, "", &waProto.Message{
-			Conversation: stringRef(thankyouResponse),
-		})
-
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
-	c.disclaimer(jid, id)
-}
-
-func (c Client) disclaimer(jid types.JID, id string) {
-	// If we haven't sent the disclaimer in 24 hours, then do that
-	if !c.r.HasRecentlySent(disclaimerKey(id)) {
-		ctx := context.Background()
-
-		c.r.MarkRecentlySent(disclaimerKey(id), time.Hour*24)
-		_, err := c.c.SendMessage(ctx, jid, "", &waProto.Message{
-			Conversation: stringRef(disclaimerResponse),
-		})
-
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
+	return c.r.Produce(id, txt)
 }
 
 func (c Client) ResponseQueue(m chan Message) {
