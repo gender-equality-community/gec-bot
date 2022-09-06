@@ -55,18 +55,10 @@ jobs:
         # Disabling shallow clone is recommended for improving relevancy of reporting
         fetch-depth: 0
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.19
-
     - name: Download a single artifact
       uses: actions/download-artifact@v3
       with:
         name: coverage
-
-    - name: Test
-      run: ls -altrR
 
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
@@ -100,9 +92,9 @@ jobs:
     - name: Sign container image
       run: |
         make .image
-        cosign sign --key env://COSIGN_SECRET $(cat .image)
+        cosign sign --key env://COSIGN_PRIVATE_KEY $(cat .image)
       env:
-        COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_SECRET}}
+        COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_SIGNING_SECRET}}
         COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
 
     - name: Upload bom to release
