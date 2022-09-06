@@ -26,7 +26,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v -covermode=count -coverprofile=coverage.out ./...
 
     - name: gosec
       run: |
@@ -38,8 +38,16 @@ jobs:
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
         golangci-lint run --skip-files='.*_test.go'
 
+    - name: Archive code coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage
+        path: |
+            coverage.out
+
 
   sonarcloud:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -52,8 +60,13 @@ jobs:
       with:
         go-version: 1.19
 
+    - name: Download a single artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage
+
     - name: Test
-      run: go test -covermode=count -coverprofile=coverage.out ./...
+      run: ls -altrR
 
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
@@ -63,7 +76,7 @@ jobs:
 
 
   build-and-push:
-    needs: [sonarcloud, test]
+    needs: sonarcloud
     runs-on: ubuntu-latest
     #if: contains(github.ref, 'refs/tags')
     steps:
@@ -74,16 +87,6 @@ jobs:
       with:
         version: v1
         args: mod -licenses -json -output bom.json
-
-    - name: Upload bom to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: bom.json
-        asset_name: Bill of Materials
-        tag: ${{ github.ref }}
-        overwrite: true
-        body: "CycloneDX json output"
 
     - name: Build and push containers
       run: |
@@ -101,3 +104,13 @@ jobs:
       env:
         COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_SECRET}}
         COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
+
+    - name: Upload bom to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: bom.json
+        asset_name: Bill of Materials
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: "CycloneDX json output"
