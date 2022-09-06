@@ -2,3 +2,6 @@
 gec-bot
 app
 yamls/
+bom.json
+cosign.key
+.image

@@ -1,6 +1,7 @@
 IMG ?= ghcr.io/gender-equality-community/gec-bot
 TAG ?= latest
 LOGLVL ?= INFO
+COSIGN_SECRET ?= cosign.key
 
 default: app
 
@@ -14,3 +15,6 @@ docker-build:
 
 docker-push:
 	docker push $(IMG):$(TAG)
+
+.image:
+	echo $(IMG):$(TAG) > $@
