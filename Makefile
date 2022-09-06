@@ -16,6 +16,5 @@ docker-build:
 docker-push:
 	docker push $(IMG):$(TAG)
 
-.PHONY: sign-image
-sign-image:
-	cosign sign --key $(COSIGN_SECRET) $(IMG):$(TAG)
+.image:
+	echo $(IMG):$(TAG) > $@
