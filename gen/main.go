@@ -14,30 +14,47 @@ const output = "config.gen.go"
 
 var config = flag.String("f", "config.toml", "configuration file to load")
 
+// Responses holds our default responses
+type Responses struct {
+	Greeting   string
+	Thankyou   string
+	Disclaimer string
+}
+
 // Config holds the loaded configuration from our input file
 type Config struct {
-	Responses struct {
-		Greeting   string
-		Thankyou   string
-		Disclaimer string
-	}
+	Responses Responses
 }
 
 func main() {
 	flag.Parse()
 
-	cf, err := os.ReadFile(*config)
+	c, err := readToml(*config)
 	if err != nil {
 		panic(err)
 	}
 
-	c := new(Config)
-
-	_, err = toml.Decode(string(cf), c)
+	f, err := generate(c)
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println(f)
+}
+
+func readToml(f string) (c Config, err error) {
+	//#nosec
+	cf, err := os.ReadFile(f)
+	if err != nil {
+		return
+	}
+
+	_, err = toml.Decode(string(cf), &c)
+
+	return
+}
+
+func generate(c Config) (out string, err error) {
 	f := jen.NewFile("main")
 	f.HeaderComment("Code generated from gen/main.go DO NOT EDIT ")
 
@@ -53,9 +70,7 @@ func main() {
 	buf := strings.Builder{}
 
 	err = f.Render(&buf)
-	if err != nil {
-		panic(err)
-	}
+	out = buf.String()
 
-	fmt.Println(buf.String())
+	return
 }
