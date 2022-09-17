@@ -51,7 +51,11 @@ func main() {
 	f.Const().Id("disclaimerResponse").Op("=").Lit(c.Responses.Disclaimer)
 
 	buf := strings.Builder{}
-	f.Render(&buf)
+
+	err = f.Render(&buf)
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println(buf.String())
 }
