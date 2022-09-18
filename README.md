@@ -5,6 +5,7 @@
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=gender-equality-community_gec-bot&metric=bugs)](https://sonarcloud.io/summary/new_code?id=gender-equality-community_gec-bot)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fgender-equality-community%2Fgec-bot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fgender-equality-community%2Fgec-bot?ref=badge_shield)
 
 ---
 
@@ -60,3 +61,7 @@ This application passes messages along via redis streams; these are lightweight,
 ## Deployment
 
 Deployments are manual for now.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fgender-equality-community%2Fgec-bot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fgender-equality-community%2Fgec-bot?ref=badge_large)
