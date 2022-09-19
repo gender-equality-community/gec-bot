@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -15,7 +16,13 @@ var (
 	LogLevel  = "DEBUG"
 	db        = os.Getenv("DATABASE")
 	redisAddr = os.Getenv("REDIS_ADDR")
+
+	boottime time.Time
 )
+
+func init() {
+	boottime = time.Now()
+}
 
 func main() {
 	dbLog := waLog.Stdout("Database", LogLevel, true)

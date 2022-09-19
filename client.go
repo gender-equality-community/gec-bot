@@ -86,6 +86,24 @@ func (c Client) handleMessage(msg *events.Message) {
 		return
 	}
 
+	// If message came in over 15 minutes before the app booted,
+	// then ignore it.
+	//
+	// This is important for when the app restarts and gets a new
+	// database instance, such as if the underlying hardware goes away
+	// or the cluster on which it runs goes to hell
+	//
+	// This is, in effect, a core component of our DR strategy- should
+	// we bring the app back from an outage and need to re-QR then
+	// we don't want to have to react to every message we've ever seen
+	// or else we're just going to spam the hell out of everyone.
+	//
+	// The 15 minutes gives us some safety in case getting the phone and
+	// QR-ing takes too long and we miss messages
+	if !msg.Info.Timestamp.After(boottime.Add(0 - (15 * time.Minute))) {
+		return
+	}
+
 	jid := msg.Info.Sender.ToNonAD()
 
 	// lookup id for jid
