@@ -74,6 +74,12 @@ func TestNew(t *testing.T) {
 }
 
 func TestClient_Handle(t *testing.T) {
+	oldBoottime := boottime
+	defer func() {
+		boottime = oldBoottime
+	}()
+	boottime = time.Time{}
+
 	for _, test := range []struct {
 		name           string
 		wc             *dummyClient
@@ -113,6 +119,35 @@ func TestClient_Handle(t *testing.T) {
 				}
 			})
 		})
+	}
+}
+
+func TestClient_Handle_SkipOldMessage(t *testing.T) {
+	c := Client{
+		c: &dummyClient{},
+		r: Redis{
+			client: &dummyRedis{},
+		},
+	}
+
+	c.handler(&events.Message{
+		Info: types.MessageInfo{
+			MessageSource: types.MessageSource{
+				IsFromMe: false,
+				Sender:   dummyJid(),
+			},
+			ID:        "123",
+			Timestamp: time.Unix(578430600, 0),
+		},
+		Message: &waProto.Message{
+			ExtendedTextMessage: &waProto.ExtendedTextMessage{
+				Text: stringRef("Hi!"),
+			},
+		},
+	})
+
+	if c.c.(*dummyClient).msg != "" {
+		t.Errorf("unexpected response %q", c.c.(*dummyClient).msg)
 	}
 }
 
