@@ -85,6 +85,13 @@ func (r *dummyRedis) XReadGroup(context.Context, *redis.XReadGroupArgs) *redis.X
 	}, err)
 }
 
+func TestNewRedis(t *testing.T) {
+	_, err := NewRedis("example.com:6379", "test-in", "test-out")
+	if err != nil {
+		t.Errorf("unexpected error: %#v", err)
+	}
+}
+
 func TestRedis_Process(t *testing.T) {
 	messages := make([]Message, 0)
 	c := make(chan Message)
