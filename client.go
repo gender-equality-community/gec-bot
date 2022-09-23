@@ -16,6 +16,10 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
+var (
+	emptyMessageError = fmt.Errorf("Empty message from whatsapp")
+)
+
 type whatsappClient interface {
 	AddEventHandler(handler whatsmeow.EventHandler) uint32
 	GetQRChannel(ctx context.Context) (<-chan whatsmeow.QRChannelItem, error)
@@ -112,6 +116,12 @@ func (c Client) handleMessage(msg *events.Message) {
 		err error
 	)
 
+	defer func() {
+		if err != nil {
+			log.Print(err)
+		}
+	}()
+
 	id, err = c.r.JIDToID(jid)
 	if err != nil {
 		id, err = c.r.MintID(jid)
@@ -120,14 +130,8 @@ func (c Client) handleMessage(msg *events.Message) {
 		}
 	}
 
-	var txt string
-	if msg.Message.ExtendedTextMessage != nil {
-		txt = msg.Message.ExtendedTextMessage.GetText()
-	} else {
-		txt = msg.Message.GetConversation()
-	}
-
-	if txt == "" {
+	txt, err := readMessage(msg)
+	if err != nil {
 		return
 	}
 
@@ -149,18 +153,16 @@ func (c Client) handleMessage(msg *events.Message) {
 		c.r.MarkRecentlySent(thankyouKey(id), time.Minute*30)
 	}
 
+	if err != nil || c.r.HasRecentlySent(disclaimerKey(id)) {
+		return
+	}
+
+	err = c.sendAutoResponse(jid, id, disclaimerResponse)
 	if err != nil {
-		log.Print(err)
+		return
 	}
 
-	if !c.r.HasRecentlySent(disclaimerKey(id)) {
-		err = c.sendAutoResponse(jid, id, disclaimerResponse)
-		if err != nil {
-			log.Print(err)
-		}
-
-		c.r.MarkRecentlySent(disclaimerKey(id), time.Hour*24)
-	}
+	c.r.MarkRecentlySent(disclaimerKey(id), time.Hour*24)
 }
 
 func (c Client) sendAutoResponse(jid types.JID, id, txt string) (err error) {
@@ -207,4 +209,18 @@ func (c Client) HandleResponse(msg Message) (err error) {
 
 func stringRef(s string) *string {
 	return &s
+}
+
+func readMessage(msg *events.Message) (txt string, err error) {
+	if msg.Message.ExtendedTextMessage != nil {
+		return msg.Message.ExtendedTextMessage.GetText(), nil
+	}
+
+	txt = msg.Message.GetConversation()
+
+	if txt == "" {
+		err = emptyMessageError
+	}
+
+	return
 }
