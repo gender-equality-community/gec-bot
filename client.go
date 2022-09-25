@@ -204,6 +204,8 @@ func (c Client) HandleResponse(msg Message) (err error) {
 		Conversation: stringRef(msg.Message),
 	})
 
+	c.r.MarkRecentlySent(thankyouKey(msg.ID), time.Minute*30)
+
 	return
 }
 
