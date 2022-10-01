@@ -27,6 +27,7 @@ type whatsappClient interface {
 	Disconnect()
 	MarkRead([]string, time.Time, types.JID, types.JID) error
 	SendMessage(context.Context, types.JID, string, *waProto.Message) (whatsmeow.SendResponse, error)
+	SendPresence(types.Presence) error
 }
 
 type Client struct {
@@ -79,6 +80,9 @@ func (c *Client) disconnect() {
 }
 
 func (c Client) handler(evt interface{}) {
+	// #nosec
+	c.c.SendPresence(types.PresenceAvailable)
+
 	switch v := evt.(type) {
 	case *events.Message:
 		c.handleMessage(v)

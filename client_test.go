@@ -13,9 +13,10 @@ import (
 )
 
 type dummyClient struct {
-	err  bool
-	read bool
-	msg  string
+	err      bool
+	read     bool
+	msg      string
+	presence bool
 }
 
 func (dummyClient) AddEventHandler(handler whatsmeow.EventHandler) uint32 { return 1 }
@@ -57,6 +58,12 @@ func (c *dummyClient) SendMessage(_ context.Context, _ types.JID, _ string, msg 
 	}
 
 	return
+}
+
+func (c *dummyClient) SendPresence(types.Presence) error {
+	c.presence = true
+
+	return nil
 }
 
 func TestNew(t *testing.T) {
@@ -110,6 +117,12 @@ func TestClient_Handle(t *testing.T) {
 			t.Run("message acked correctly", func(t *testing.T) {
 				if test.expectRead != test.wc.read {
 					t.Errorf("expected %v, received %v", test.expectRead, test.wc.read)
+				}
+			})
+
+			t.Run("presence is set", func(t *testing.T) {
+				if !test.wc.presence {
+					t.Error("presence was not set")
 				}
 			})
 
