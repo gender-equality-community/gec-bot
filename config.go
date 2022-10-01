@@ -11,6 +11,12 @@ var (
 
 	// Disclaimer response is sent to ensure recipients don't send us stuff we can't deal with.
 	disclaimerResponse = Lookup("DISCLAIMER", "DISCLAIMER: This is not an incident reporting service. If you believe you're being subjected to bullying, harassment, or misconduct then I cannot escalate on your behalf but I can advise you on your next steps.")
+
+	// DB is the location, on disk, of the database to use
+	db = MustLookup("DATABASE")
+
+	// Redis Address is the network address of the redis instance to use
+	redisAddr = MustLookup("REDIS_ADDR")
 )
 
 // Lookup accepts an environment variable name and a default value.
@@ -22,4 +28,17 @@ func Lookup(v, d string) string {
 		return s
 	}
 	return d
+}
+
+// MustLookup accepts and enviroment variable nae and returns
+// the value of that.
+//
+// Should the var be unset or empty, MustLookup panics
+func MustLookup(v string) (s string) {
+	s = os.Getenv(v)
+	if s == "" {
+		panic("Environment variable " + v + " is empty or unset")
+	}
+
+	return
 }

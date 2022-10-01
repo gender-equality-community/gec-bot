@@ -18,3 +18,9 @@ docker-push:
 
 .image:
 	echo $(IMG):$(TAG) > $@
+
+.PHONY: test
+test: export DATABASE = /tmp/testing.db
+test: export REDIS_ADDR = redis://redis.example.com:6379
+test:
+	go test -v -covermode=count -coverprofile=coverage.out ./...
