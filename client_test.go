@@ -13,10 +13,12 @@ import (
 )
 
 type dummyClient struct {
-	err      bool
-	read     bool
-	msg      string
-	presence bool
+	err       bool
+	statusErr bool
+	read      bool
+	msg       string
+	presence  bool
+	status    string
 }
 
 func (dummyClient) AddEventHandler(handler whatsmeow.EventHandler) uint32 { return 1 }
@@ -62,6 +64,12 @@ func (c *dummyClient) SendMessage(_ context.Context, _ types.JID, _ string, msg 
 
 func (c *dummyClient) SendPresence(types.Presence) error {
 	c.presence = true
+
+	return nil
+}
+
+func (c *dummyClient) SetStatusMessage(s string) error {
+	c.status = s
 
 	return nil
 }
@@ -200,6 +208,37 @@ func TestClient_HandleResponse(t *testing.T) {
 					t.Errorf("expected %q, received %q", test.msg.Message, test.wc.msg)
 				}
 			})
+		})
+	}
+}
+
+func TestClient_Connect(t *testing.T) {
+	for _, test := range []struct {
+		name         string
+		wc           *dummyClient
+		expectErr    bool
+		expectStatus string
+	}{
+		{"Connect errors float up", &dummyClient{err: true}, true, ""},
+		{"Status is correctly set", new(dummyClient), false, statusMessage},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			c := Client{
+				c: test.wc,
+			}
+
+			defer c.disconnect()
+
+			err := c.connect()
+			if err == nil && test.expectErr {
+				t.Errorf("expected error")
+			} else if err != nil && !test.expectErr {
+				t.Errorf("unexpected error: %+v", err)
+			}
+
+			if test.expectStatus != test.wc.status {
+				t.Errorf("expected %q, received %q", test.expectStatus, test.wc.status)
+			}
 		})
 	}
 }

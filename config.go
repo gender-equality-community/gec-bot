@@ -12,6 +12,10 @@ var (
 	// Disclaimer response is sent to ensure recipients don't send us stuff we can't deal with.
 	disclaimerResponse = Lookup("DISCLAIMER", "DISCLAIMER: This is not an incident reporting service. If you believe you're being subjected to bullying, harassment, or misconduct then I cannot escalate on your behalf but I can advise you on your next steps.")
 
+	// Status message is sent on startup and sets the bot's status from the default of
+	// `Hey there! I am using WhatsApp.`
+	statusMessage = Lookup("STATUS", "Hello, my name is Ada!")
+
 	// DB is the location, on disk, of the database to use
 	db = MustLookup("DATABASE")
 

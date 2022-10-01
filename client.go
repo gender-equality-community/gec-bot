@@ -28,6 +28,7 @@ type whatsappClient interface {
 	MarkRead([]string, time.Time, types.JID, types.JID) error
 	SendMessage(context.Context, types.JID, string, *waProto.Message) (whatsmeow.SendResponse, error)
 	SendPresence(types.Presence) error
+	SetStatusMessage(string) error
 }
 
 type Client struct {
@@ -72,7 +73,12 @@ func (c *Client) connect() (err error) {
 		return
 	}
 
-	return c.c.Connect()
+	err = c.c.Connect()
+	if err != nil {
+		return
+	}
+
+	return c.c.SetStatusMessage(statusMessage)
 }
 
 func (c *Client) disconnect() {
