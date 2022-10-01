@@ -18,6 +18,30 @@ The GEC Bot does two things:
 
 ![Infrastructure diagram showing how GEC components talk to one another](doc/gec-bots-arch.svg)
 
+## Configuration
+
+### Required environment variables
+
+```bash
+$ export REDIS_ADDR=redis:6379
+$ export DATABASE=/tmp/database.db   # Created if it doesn't exist
+```
+
+### Auto-responses
+
+This bot provides some default messages, defined in [`config.go`](config.go)
+
+1. Greeting response is sent when a recipient sends a message sends us a greeting
+1. Thank You response is sent when a recipient sends us a message and is capped at a max of 1 per 30 mins
+1. Disclaimer response is sent to ensure recipients don't send us stuff we can't deal with.
+
+These can be overrided with the following respective environment variables:
+
+```bash
+$ export GREETING="Hello <3"
+$ export THANK_YOU="Thanks! We'll get back to you"
+$ export DISCLAIMER="Be aware that there's stuff we can't do!"
+```
 
 ## Anonymisation
 
@@ -38,13 +62,6 @@ We then check whether this ID is already present in our database. This gives key
 overhand-subdivide-thaw
 promotion-basically-unreal
 clumsily-tag-gizmo
-return-lyricist-sixtieth
-helmet-gothic-linguist
-frugality-pediatric-overstate
-subzero-plastic-sadness
-sliding-dairy-sleet
-endurance-ferry-election
-unlatch-childhood-gristle
 ```
 
 These are used to group messages from a recipient later on, through slack.
@@ -60,8 +77,7 @@ This application passes messages along via redis streams; these are lightweight,
 
 ## Deployment
 
-Deployments are manual for now.
-
+See the [Gender Equality Community kubernetes operator](https://github.com/gender-equality-community/gec-operator)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fgender-equality-community%2Fgec-bot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fgender-equality-community%2Fgec-bot?ref=badge_large)

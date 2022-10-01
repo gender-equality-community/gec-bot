@@ -13,9 +13,7 @@ import (
 )
 
 var (
-	LogLevel  = "DEBUG"
-	db        = os.Getenv("DATABASE")
-	redisAddr = os.Getenv("REDIS_ADDR")
+	LogLevel = "DEBUG"
 
 	boottime time.Time
 )

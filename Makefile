@@ -5,12 +5,9 @@ COSIGN_SECRET ?= cosign.key
 
 default: app
 
-app: *.go go.mod go.sum config.gen.go
+app: *.go go.mod go.sum
 	go build -o $@ -ldflags="-s -w -linkmode=external -X main.LogLevel=$(LOGLVL)" -buildmode=pie -trimpath
 	upx $@
-
-config.gen.go: config.toml gen/main.go
-	go run gen/main.go -f $< > $@
 
 .PHONY: docker-build docker-push
 docker-build:
@@ -21,3 +18,9 @@ docker-push:
 
 .image:
 	echo $(IMG):$(TAG) > $@
+
+.PHONY: test
+test: export DATABASE = /tmp/testing.db
+test: export REDIS_ADDR = redis://redis.example.com:6379
+test:
+	go test -v -covermode=count -coverprofile=coverage.out ./...
