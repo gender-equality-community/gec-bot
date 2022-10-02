@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	gtypes "github.com/gender-equality-community/types"
 	"github.com/mdp/qrterminal"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
@@ -186,10 +187,10 @@ func (c Client) sendAutoResponse(jid types.JID, id, txt string) (err error) {
 		return
 	}
 
-	return c.r.Produce(id, txt)
+	return c.r.Autorespond(id, txt)
 }
 
-func (c Client) ResponseQueue(m chan Message) {
+func (c Client) ResponseQueue(m chan gtypes.Message) {
 	for msg := range m {
 		err := c.HandleResponse(msg)
 		if err != nil {
@@ -198,7 +199,7 @@ func (c Client) ResponseQueue(m chan Message) {
 	}
 }
 
-func (c Client) HandleResponse(msg Message) (err error) {
+func (c Client) HandleResponse(msg gtypes.Message) (err error) {
 	ctx := context.Background()
 
 	if msg.ID == "" {

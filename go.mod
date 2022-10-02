@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/agnivade/levenshtein v1.1.1
+	github.com/gender-equality-community/types v1.1.0
 	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/mdp/qrterminal v1.0.1
@@ -17,6 +18,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	go.mau.fi/libsignal v0.0.0-20220628090436-4d18b66b087e // indirect
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
