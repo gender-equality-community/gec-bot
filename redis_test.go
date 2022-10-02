@@ -13,10 +13,12 @@ import (
 
 type dummyRedis struct {
 	err      bool
+	xrgErr   bool
 	msgCount int
 	msg      string
 	idExists bool
 	noJID    bool
+	ts       any
 }
 
 func (r dummyRedis) getErr() (err error) {
@@ -64,7 +66,11 @@ func (r dummyRedis) XGroupCreate(context.Context, string, string, string) *redis
 }
 
 func (r *dummyRedis) XReadGroup(context.Context, *redis.XReadGroupArgs) *redis.XStreamSliceCmd {
-	err := r.getErr()
+	var err error
+	if r.xrgErr {
+		err = fmt.Errorf("read group error")
+	}
+
 	if r.msgCount > 0 {
 		// Hang if we've already sent a message
 		for {
@@ -73,13 +79,22 @@ func (r *dummyRedis) XReadGroup(context.Context, *redis.XReadGroupArgs) *redis.X
 
 	r.msgCount++
 
+	var ts any
+	switch r.ts {
+	case nil:
+		ts = 1661618790
+
+	default:
+		ts = r.ts
+	}
+
 	return redis.NewXStreamSliceCmdResult([]redis.XStream{
 		{
 			Messages: []redis.XMessage{
 				{
 					Values: map[string]interface{}{
 						"id":  "abc123",
-						"ts":  1661618790,
+						"ts":  ts,
 						"msg": "hello, world!",
 					},
 				},
@@ -96,39 +111,55 @@ func TestNewRedis(t *testing.T) {
 }
 
 func TestRedis_Process(t *testing.T) {
-	messages := make([]gtypes.Message, 0)
-	c := make(chan gtypes.Message)
+	for _, test := range []struct {
+		name      string
+		rc        *dummyRedis
+		expect    gtypes.Message
+		expectErr bool
+	}{
+		{"Happy path", new(dummyRedis), gtypes.Message{
+			ID:        "abc123",
+			Timestamp: 1661618790,
+			Message:   "hello, world!",
+		}, false},
+		{"XGroupCreate errors bubble up", &dummyRedis{err: true}, gtypes.Message{}, true},
+		{"XGroupRead errors bubble up", &dummyRedis{xrgErr: true}, gtypes.Message{}, true},
+		{"Parse errors bubble up", &dummyRedis{ts: "foobarbaz"}, gtypes.Message{}, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			messages := make([]gtypes.Message, 0)
+			c := make(chan gtypes.Message)
 
-	defer close(c)
+			defer close(c)
 
-	go func() {
-		for m := range c {
-			messages = append(messages, m)
-		}
-	}()
+			go func() {
+				for m := range c {
+					messages = append(messages, m)
+				}
+			}()
 
-	go func() {
-		err := Redis{client: &dummyRedis{}}.Process(c)
-		if err != nil {
-			t.Errorf("unexpected error %#v", err)
-		}
-	}()
+			go func() {
+				err := Redis{client: test.rc}.Process(c)
+				if err == nil && test.expectErr {
+					t.Errorf("expected error")
+				} else if err != nil && !test.expectErr {
+					t.Errorf("unexpected error: %+v", err)
+				}
+			}()
 
-	// Sleep for a tenth of a second to let messages chan
-	// pick up message and do what it needs
-	time.Sleep(time.Millisecond * 50)
+			// Sleep for a tenth of a second to let messages chan
+			// pick up message and do what it needs
+			time.Sleep(time.Millisecond * 50)
 
-	if len(messages) != 1 {
-		t.Fatalf("expected 1 messages, received %d", len(messages))
-	}
+			if !test.expectErr {
+				if len(messages) != 1 {
+					t.Fatalf("expected 1 messages, received %d", len(messages))
+				}
 
-	expect := gtypes.Message{
-		ID:        "abc123",
-		Timestamp: 1661618790,
-		Message:   "hello, world!",
-	}
-
-	if !reflect.DeepEqual(expect, messages[0]) {
-		t.Errorf("expected %#v, received %#v", expect, messages[0])
+				if !reflect.DeepEqual(test.expect, messages[0]) {
+					t.Errorf("expected %#v, received %#v", test.expect, messages[0])
+				}
+			}
+		})
 	}
 }

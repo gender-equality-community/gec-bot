@@ -80,7 +80,11 @@ func (r Redis) Process(c chan gtypes.Message) (err error) {
 		return err
 	}
 
-	var entries []redis.XStream
+	var (
+		entries []redis.XStream
+		msg     gtypes.Message
+	)
+
 	for {
 		entries, err = r.client.XReadGroup(ctx, &redis.XReadGroupArgs{
 			Group:    groupName,
@@ -94,7 +98,7 @@ func (r Redis) Process(c chan gtypes.Message) (err error) {
 			break
 		}
 
-		msg, err := gtypes.ParseMessage(entries[0].Messages[0].Values)
+		msg, err = gtypes.ParseMessage(entries[0].Messages[0].Values)
 		if err != nil {
 			break
 		}
