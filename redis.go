@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	gtypes "github.com/gender-equality-community/types"
 	redis "github.com/go-redis/redis/v9"
 	"github.com/rs/xid"
 	"github.com/sethvargo/go-diceware/diceware"
@@ -56,18 +57,22 @@ func NewRedis(addr, inStream, outStream string) (r Redis, err error) {
 	return r, nil
 }
 
-func (r Redis) Produce(id, msg string) (err error) {
+func (r Redis) Produce(id, msg string) error {
+	return r.produce(gtypes.SourceWhatsapp, id, msg)
+}
+
+func (r Redis) Autorespond(id, msg string) error {
+	return r.produce(gtypes.SourceAutoresponse, id, msg)
+}
+
+func (r Redis) produce(source gtypes.Source, id, msg string) (err error) {
 	return r.client.XAdd(context.Background(), &redis.XAddArgs{
 		Stream: r.outStream,
-		Values: map[string]interface{}{
-			"id":  id,
-			"ts":  time.Now().Unix(),
-			"msg": msg,
-		},
+		Values: gtypes.NewMessage(source, id, msg).Map(),
 	}).Err()
 }
 
-func (r Redis) Process(c chan Message) (err error) {
+func (r Redis) Process(c chan gtypes.Message) (err error) {
 	ctx := context.Background()
 
 	err = r.client.XGroupCreate(ctx, r.inStream, groupName, "$").Err()
@@ -89,16 +94,15 @@ func (r Redis) Process(c chan Message) (err error) {
 			break
 		}
 
-		msg := entries[0].Messages[0].Values
-
-		c <- Message{
-			ID:      msg["id"].(string),
-			Ts:      msg["ts"].(string),
-			Message: msg["msg"].(string),
+		msg, err := gtypes.ParseMessage(entries[0].Messages[0].Values)
+		if err != nil {
+			break
 		}
+
+		c <- msg
 	}
 
-	return nil
+	return
 }
 
 // MarkRecentlySent marks a specific recipient as having received an auto-response

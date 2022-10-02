@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gender-equality-community/types"
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -44,7 +45,7 @@ func main() {
 		panic(err)
 	}
 
-	mChan := make(chan Message)
+	mChan := make(chan types.Message)
 	go r.Process(mChan)
 	go client.ResponseQueue(mChan)
 

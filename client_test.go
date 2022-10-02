@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	gtypes "github.com/gender-equality-community/types"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
@@ -173,19 +174,19 @@ func TestClient_Handle_SkipOldMessage(t *testing.T) {
 }
 
 func TestClient_HandleResponse(t *testing.T) {
-	cleanMsg := Message{ID: "some-user", Message: "Hello, World!"}
+	cleanMsg := gtypes.Message{ID: "some-user", Message: "Hello, World!"}
 
 	for _, test := range []struct {
 		name      string
 		wc        *dummyClient
 		rc        *dummyRedis
-		msg       Message
+		msg       gtypes.Message
 		expectErr bool
 	}{
-		{"Message is malformed and has no ID should error", new(dummyClient), new(dummyRedis), Message{}, true},
+		{"Message is malformed and has no ID should error", new(dummyClient), new(dummyRedis), gtypes.Message{}, true},
 		{"Redis errors float error up", new(dummyClient), &dummyRedis{err: true}, cleanMsg, true},
 		{"Whatsapp messages float up", &dummyClient{err: true}, new(dummyRedis), cleanMsg, true},
-		{"Unknown recipient should fail", &dummyClient{err: true}, &dummyRedis{noJID: true}, Message{ID: "foo"}, true},
+		{"Unknown recipient should fail", &dummyClient{err: true}, &dummyRedis{noJID: true}, gtypes.Message{ID: "foo"}, true},
 		{"Valid payloads and recipients should succeed", new(dummyClient), new(dummyRedis), cleanMsg, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	gtypes "github.com/gender-equality-community/types"
 	"github.com/go-redis/redis/v9"
 )
 
@@ -65,7 +66,9 @@ func (r dummyRedis) XGroupCreate(context.Context, string, string, string) *redis
 func (r *dummyRedis) XReadGroup(context.Context, *redis.XReadGroupArgs) *redis.XStreamSliceCmd {
 	err := r.getErr()
 	if r.msgCount > 0 {
-		err = fmt.Errorf("break out")
+		// Hang if we've already sent a message
+		for {
+		}
 	}
 
 	r.msgCount++
@@ -76,7 +79,7 @@ func (r *dummyRedis) XReadGroup(context.Context, *redis.XReadGroupArgs) *redis.X
 				{
 					Values: map[string]interface{}{
 						"id":  "abc123",
-						"ts":  "1661618790",
+						"ts":  1661618790,
 						"msg": "hello, world!",
 					},
 				},
@@ -93,8 +96,8 @@ func TestNewRedis(t *testing.T) {
 }
 
 func TestRedis_Process(t *testing.T) {
-	messages := make([]Message, 0)
-	c := make(chan Message)
+	messages := make([]gtypes.Message, 0)
+	c := make(chan gtypes.Message)
 
 	defer close(c)
 
@@ -113,16 +116,16 @@ func TestRedis_Process(t *testing.T) {
 
 	// Sleep for a tenth of a second to let messages chan
 	// pick up message and do what it needs
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 50)
 
 	if len(messages) != 1 {
 		t.Fatalf("expected 1 messages, received %d", len(messages))
 	}
 
-	expect := Message{
-		ID:      "abc123",
-		Ts:      "1661618790",
-		Message: "hello, world!",
+	expect := gtypes.Message{
+		ID:        "abc123",
+		Timestamp: 1661618790,
+		Message:   "hello, world!",
 	}
 
 	if !reflect.DeepEqual(expect, messages[0]) {
