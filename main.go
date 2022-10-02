@@ -15,6 +15,8 @@ import (
 
 var (
 	LogLevel = "DEBUG"
+	dbLog    = waLog.Stdout("Database", LogLevel, true)
+	mChan    = make(chan types.Message)
 
 	boottime time.Time
 )
@@ -24,8 +26,6 @@ func init() {
 }
 
 func main() {
-	dbLog := waLog.Stdout("Database", LogLevel, true)
-
 	container, err := sqlstore.New("sqlite3",
 		fmt.Sprintf("file:.%s?_foreign_keys=on", db),
 		dbLog,
@@ -45,7 +45,6 @@ func main() {
 		panic(err)
 	}
 
-	mChan := make(chan types.Message)
 	go r.Process(mChan)
 	go client.ResponseQueue(mChan)
 
