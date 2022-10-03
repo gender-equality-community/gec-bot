@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/agnivade/levenshtein v1.1.1
-	github.com/gender-equality-community/types v1.1.0
+	github.com/gender-equality-community/types v1.2.0
 	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/mdp/qrterminal v1.0.1
