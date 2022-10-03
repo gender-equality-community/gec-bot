@@ -13,6 +13,8 @@ github.com/dgryski/trifles v0.0.0-20200323201526-dd97f9abfb48/go.mod h1:if7Fbed8
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/gender-equality-community/types v1.2.0 h1:mdbkBCHUzHDCKHMlAmnXfC6BiCHca9zyQvNJX9gv7SI=
 github.com/gender-equality-community/types v1.2.0/go.mod h1:zSavH17hq7FtUZysU9m2vwflJzJLcTxe7/OD6V3DB+g=
+github.com/gender-equality-community/types v1.4.0 h1:Ixyky3M6cX6X/zQ/+xJ2CGmm8x8JGBoSq8LlEBmV6lM=
+github.com/gender-equality-community/types v1.4.0/go.mod h1:zSavH17hq7FtUZysU9m2vwflJzJLcTxe7/OD6V3DB+g=
 github.com/go-redis/redis/v9 v9.0.0-beta.2 h1:ZSr84TsnQyKMAg8gnV+oawuQezeJR11/09THcWCQzr4=
 github.com/go-redis/redis/v9 v9.0.0-beta.2/go.mod h1:Bldcd/M/bm9HbnNPi/LUtYBSD8ttcZYBMupwMXhdU0o=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
