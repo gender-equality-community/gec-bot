@@ -6,7 +6,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1
 	github.com/gender-equality-community/types v1.5.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.1
-	github.com/mattn/go-sqlite3 v1.14.15
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mdp/qrterminal v1.0.1
 	github.com/rs/xid v1.4.0
 	github.com/sethvargo/go-diceware v0.3.0
