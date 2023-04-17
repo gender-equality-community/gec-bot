@@ -8,7 +8,7 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mdp/qrterminal v1.0.1
-	github.com/rs/xid v1.4.0
+	github.com/rs/xid v1.5.0
 	github.com/sethvargo/go-diceware v0.3.0
 	go.mau.fi/whatsmeow v0.0.0-20221228122648-8db2c068c345
 )
